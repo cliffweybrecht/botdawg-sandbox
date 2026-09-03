@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Shipkit — Release notes</title>
+<style>
+:root { --bg:#0f1419; --panel:#1a2332; --ink:#e7ecf3; --muted:#8b9bb4; --line:#2a3548; --acc:#3dd6c6; --acc2:#7aa2f7; --warn:#f0c674; --ok:#9ece6a; --font: ui-sans-serif, system-ui, sans-serif; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+html, body { margin:0; min-height:100%; background: var(--bg); color: var(--ink); font-family: var(--font); }
+body { background: radial-gradient(1200px 600px at 10% -10%, #1b2a44 0%, transparent 55%), var(--bg); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+header { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px; }
+h1 { font-size: 28px; letter-spacing: -0.03em; margin:0; }
+h1 span { color: var(--acc); }
+.sub { color: var(--muted); font-size: 14px; margin-top:6px; }
+.badge { font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color: var(--acc); border:1px solid var(--line); padding:6px 10px; border-radius:999px; }
+.grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border:1px solid var(--line); border-radius: 14px; padding:16px; }
+label { display:block; font-size:12px; color: var(--muted); margin-bottom:6px; letter-spacing:0.04em; text-transform:uppercase; }
+input, textarea { width:100%; background:#0e1622; color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-family: var(--mono); font-size:13px; }
+textarea { min-height: 280px; resize: vertical; line-height:1.5; }
+textarea#out { min-height: 360px; }
+.row { display:flex; gap:10px; margin-bottom:12px; }
+.row > div { flex:1; }
+button { background: var(--acc); color:#04221e; border:0; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+button.secondary { background: transparent; color: var(--ink); border:1px solid var(--line); }
+.actions { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
+.hint { color: var(--muted); font-size:12px; margin-top:8px; }
+pre.counts { margin:0 0 12px; font-family: var(--mono); font-size:12px; color: var(--acc2); }
+.toast { position:fixed; bottom:20px; right:20px; background:#123; color:var(--ok); border:1px solid var(--line); padding:10px 14px; border-radius:10px; display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ship<span>kit</span></h1>
+      <p class="sub">Paste merged PR titles. Copy GitHub Release markdown. Works offline.</p>
+    </div>
+    <div class="badge">Local · $5 kit</div>
+  </header>
+  <div class="grid">
+    <section class="card">
+      <div class="row">
+        <div><label for="version">Version</label><input id="version" placeholder="1.4.0" autocomplete="off" /></div>
+        <div><label for="intro">Intro (optional)</label><input id="intro" placeholder="What shipped this cycle" autocomplete="off" /></div>
+      </div>
+      <label for="src">Merged PR titles (one per line)</label>
+      <textarea id="src" spellcheck="false" placeholder="feat: add export&#10;fix: crash on empty&#10;feat!: drop Node 16&#10;docs: examples"></textarea>
+      <p class="hint">Prefixes: feat, fix, breaking (or type!), docs, chore. Optional #123 before the title.</p>
+    </section>
+    <section class="card">
+      <pre class="counts" id="counts"></pre>
+      <label for="out">GitHub-flavored markdown</label>
+      <textarea id="out" readonly spellcheck="false"></textarea>
+      <div class="actions">
+        <button type="button" id="copy">Copy markdown</button>
+        <button type="button" class="secondary" id="clear">Clear</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+<script>/**
+ * Shipkit grouping — pure functions for conventional-commit PR titles.
+ * Keep in sync with the inline copy in notes.html.
+ */
+
+const PREFIX_RE = /^\s*(?:(?:#)?(\d+)\s+)?(?:([a-zA-Z]+)(?:\(([^)]*)\))?(!)?\s*:\s*)?(.+?)\s*$/;
+
+/**
+ * @typedef {'features'|'fixes'|'breaking'|'other'} GroupId
+ */
+
+/**
+ * Parse a single PR title / conventional-commit subject.
+ * @param {string} line
+ * @returns {{ raw: string, number: string|null, type: string|null, scope: string|null, breaking: boolean, subject: string }}
+ */
+function parseTitle(line) {
+  const raw = String(line ?? '').replace(/\r$/, '');
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return { raw, number: null, type: null, scope: null, breaking: false, subject: '' };
+  }
+
+  const breakingInText = /\bBREAKING[- ]CHANGE\b/i.test(trimmed);
+  const m = trimmed.match(PREFIX_RE);
+  if (!m) {
+    return { raw, number: null, type: null, scope: null, breaking: breakingInText, subject: trimmed };
+  }
+
+  const number = m[1] || null;
+  const type = m[2] ? m[2].toLowerCase() : null;
+  const scope = m[3] || null;
+  const bang = Boolean(m[4]);
+  const subject = (m[5] || trimmed).trim();
+
+  return {
+    raw,
+    number,
+    type,
+    scope,
+    breaking: bang || breakingInText || type === 'breaking',
+    subject,
+  };
+}
+
+/**
+ * Map a parsed title to a group id.
+ * Priority: breaking > feat > fix > other (docs, chore, unknown, unprefixed).
+ * @param {ReturnType<typeof parseTitle>} parsed
+ * @returns {GroupId}
+ */
+function classify(parsed) {
+  if (!parsed || !parsed.subject) return 'other';
+  if (parsed.breaking) return 'breaking';
+  const t = parsed.type;
+  if (t === 'feat' || t === 'feature') return 'features';
+  if (t === 'fix' || t === 'bugfix' || t === 'bug') return 'fixes';
+  return 'other';
+}
+
+/**
+ * Split pasted text into non-empty title lines.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitLines(text) {
+  return String(text ?? '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !/^#(?!\d)/.test(l));
+}
+
+/**
+ * @param {string} text
+ * @returns {{ features: ReturnType<typeof parseTitle>[], fixes: ReturnType<typeof parseTitle>[], breaking: ReturnType<typeof parseTitle>[], other: ReturnType<typeof parseTitle>[] }}
+ */
+function groupTitles(text) {
+  const groups = { features: [], fixes: [], breaking: [], other: [] };
+  for (const line of splitLines(text)) {
+    const parsed = parseTitle(line);
+    if (!parsed.subject) continue;
+    groups[classify(parsed)].push(parsed);
+  }
+  return groups;
+}
+
+/**
+ * Format a parsed title as a GitHub-flavored markdown list item.
+ * @param {ReturnType<typeof parseTitle>} parsed
+ * @returns {string}
+ */
+function formatItem(parsed) {
+  const label = parsed.subject;
+  if (parsed.number) {
+    return `- ${label} (#${parsed.number})`;
+  }
+  return `- ${label}`;
+}
+
+const SECTION_META = [
+  { id: 'features', heading: '### Features' },
+  { id: 'fixes', heading: '### Fixes' },
+  { id: 'breaking', heading: '### Breaking' },
+  { id: 'other', heading: '### Other' },
+];
+
+/**
+ * Build GitHub Release markdown from pasted titles.
+ * @param {string} text
+ * @param {{ version?: string, intro?: string }} [opts]
+ * @returns {string}
+ */
+function toReleaseMarkdown(text, opts = {}) {
+  const groups = groupTitles(text);
+  const version = opts.version ? String(opts.version).trim() : '';
+  const intro = opts.intro ? String(opts.intro).trim() : '';
+  const parts = [];
+
+  if (version) parts.push(`## ${version.startsWith('v') ? version : `v${version}`}`, '');
+  if (intro) parts.push(intro, '');
+
+  let any = false;
+  for (const { id, heading } of SECTION_META) {
+    const items = groups[id];
+    if (!items.length) continue;
+    any = true;
+    parts.push(heading, '');
+    for (const item of items) parts.push(formatItem(item));
+    parts.push('');
+  }
+
+  if (!any) {
+    parts.push('_No changes grouped yet. Paste PR titles, one per line._', '');
+  }
+
+  return parts.join('\n').trimEnd() + '\n';
+}
+
+const GROUP_IDS = ['features', 'fixes', 'breaking', 'other'];
+const SECTION_HEADINGS = SECTION_META;
+
+
+const KEY = "shipkit.notes.v1";
+const srcEl = document.getElementById("src");
+const outEl = document.getElementById("out");
+const verEl = document.getElementById("version");
+const introEl = document.getElementById("intro");
+const countsEl = document.getElementById("counts");
+const toastEl = document.getElementById("toast");
+function render() {
+  const text = srcEl.value;
+  const md = toReleaseMarkdown(text, { version: verEl.value, intro: introEl.value });
+  outEl.value = md;
+  const g = groupTitles(text);
+  countsEl.textContent = "Features " + g.features.length + " · Fixes " + g.fixes.length + " · Breaking " + g.breaking.length + " · Other " + g.other.length;
+  localStorage.setItem(KEY, JSON.stringify({ text, version: verEl.value, intro: introEl.value }));
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    srcEl.value = s.text || "";
+    verEl.value = s.version || "";
+    introEl.value = s.intro || "";
+  } catch (e) {}
+}
+document.getElementById("copy").addEventListener("click", async () => {
+  outEl.select();
+  try { await navigator.clipboard.writeText(outEl.value); } catch (e) { document.execCommand("copy"); }
+  toastEl.style.display = "block";
+  setTimeout(() => { toastEl.style.display = "none"; }, 1200);
+});
+document.getElementById("clear").addEventListener("click", () => {
+  srcEl.value = ""; verEl.value = ""; introEl.value = ""; localStorage.removeItem(KEY); render();
+});
+srcEl.addEventListener("input", render);
+verEl.addEventListener("input", render);
+introEl.addEventListener("input", render);
+load();
+render();
+</script>
+</body>
+</html>

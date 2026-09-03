@@ -1,0 +1,11 @@
+{
+  "name": "shipkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ship GitHub releases faster — local release-notes builder and repo templates.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/notes.test.mjs"
+  },
+  "license": "SEE LICENSE IN LICENSE.txt"
+}
