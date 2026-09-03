@@ -1,0 +1,24 @@
+SHIPKIT PAID LICENSE (single-seat / team)
+Copyright (c) 2026 Shipkit
+
+This digital kit is sold as a one-time purchase. It is not open source.
+
+1. GRANT. Upon purchase, the purchaser (an individual or a single organization
+   team) is granted a non-exclusive, non-transferable, perpetual license to use
+   Shipkit in their own repositories and internal tooling. Commercial use of the
+   purchaser's own software that was shipped with the help of this kit is
+   granted.
+
+2. COPIES. The purchaser may copy notes.html, workflows, and templates into any
+   number of repositories they own or maintain for that individual or team.
+
+3. NO RESALE. The purchaser may not resell, sublicense, republish, or
+   redistribute the kit itself (the notes.html app, templates, workflow, tests,
+   or documentation packaged as a competing product or free dump). Sharing a
+   working copy with teammates covered by the same purchase is allowed.
+
+4. NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+   The licensor is not liable for damages arising from use of the kit.
+
+5. CI. Workflows are designed to run with GitHub Actions default permissions.
+   This license does not grant rights to any third-party service.
