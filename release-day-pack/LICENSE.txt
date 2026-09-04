@@ -1,0 +1,33 @@
+Release Day Pack — Paid Single-Purchaser License
+Copyright (c) 2026 Release Day Pack Author
+
+1. Grant
+   Upon purchase, you (the individual or single legal entity named on the
+   purchase) receive a non-exclusive, non-transferable license to use this
+   pack's Markdown templates and checklists for your own projects and
+   internal team workflows.
+
+2. Allowed
+   - Copying and adapting templates into your repositories and tools
+   - Sharing adapted templates with coworkers inside your purchasing entity
+   - Using the materials commercially in the course of shipping your own
+     software (the pack itself is not redistributed)
+
+3. Not allowed
+   - Reselling, relicensing, or redistributing this pack (original or
+     lightly modified) as a product, bundle, course bonus, or free download
+   - Publishing the pack wholesale on public template galleries as your own
+     paid or free product
+   - Transferring your purchase to another entity without the author's
+     written consent
+
+4. No warranty
+   THE PACK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. THE AUTHOR
+   IS NOT LIABLE FOR DAMAGES ARISING FROM USE OF THESE TEMPLATES.
+
+5. Not legal advice
+   This license covers the pack files only. It does not constitute legal,
+   compliance, or professional advice for your releases.
+
+Purchase grants rights to one purchaser (person or company). For multi-
+entity or redistribution rights, contact the author for a separate agreement.
