@@ -1,9 +1,10 @@
 # Shipkit
 
 A small developer kit for shipping GitHub releases faster.
-Price intent: five dollars one-time (sold separately). Open notes.html locally.
 
-Nothing is deployed and nothing here charges a card.
+**Buy ($5 one-time):** https://cliffstone32.gumroad.com/l/vwnmtw
+
+Open `notes.html` locally after purchase (or from this branch while testing).
 
 ## What you get
 
@@ -23,8 +24,6 @@ You may use this in repos you maintain. You may not resell the kit itself.
 4. Copy GitHub-flavored markdown into a Release body or templates/release.md.
 5. Version, intro, and last paste persist in localStorage.
 
-Example titles use feat, fix, feat!, docs, chore prefixes.
-
 ## Copy files into a repo
 
 1. Copy the workflow yaml into the target repository at the same relative path.
@@ -36,5 +35,5 @@ No extra secrets. No paid APIs.
 
 ## Tests
 
-Run the package test script (node --test).
+Run the package test script (`npm test` / `node --test`).
 Keep notes.html grouping rules aligned with lib/group.mjs.
