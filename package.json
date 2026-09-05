@@ -1,0 +1,30 @@
+{
+  "name": "stock-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stock Agent Phase A - read-only market intelligence over Robinhood Liquidity Terminal HTTP APIs.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "build": "tsc -p tsconfig.build.json",
+    "report": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.15.29",
+    "eslint": "^9.39.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1",
+    "vitest": "^3.2.3"
+  }
+}
